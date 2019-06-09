@@ -76,8 +76,8 @@ class SnakeGame():
         
         self.length = 1
         
-        startX = 4
-        startY = 4
+        startX = width//2
+        startY = height//2
         
         self.board[startX, startY] = self.headVal
         self.snake = Snake(startX, startY)
@@ -204,7 +204,6 @@ class SnakeGame():
                 (oldTailX, oldTailY, newHeadX, newHeadY) = self.snake.move(direction)
                 self.board[oldTailY, oldTailX] = 0
                 self.board[newHeadY, newHeadX] = self.headVal
-#            print(self.board)
         else:
             reward = -2
             gameOver = True
@@ -233,5 +232,5 @@ if __name__ == "__main__":
             break
         else:
             game.display()
-            print("Score:", score)
+            print("Reward:", reward, "Score:", score)
         
