@@ -7,9 +7,8 @@ import random
 
 
 class BodyNode():
-    def __init__(self, parent, child, x, y):
+    def __init__(self, parent, x, y):
         self.parent = parent
-        self.child = None
         self.x = x
         self.y = y
         
@@ -27,7 +26,7 @@ class BodyNode():
         
 class Snake():
     def __init__(self, x, y):
-        self.head = BodyNode(None, None, x, y)
+        self.head = BodyNode(None, x, y)
         self.tail = self.head
         
     def moveBodyForwards(self):
@@ -53,7 +52,7 @@ class Snake():
         return (oldTailX, oldTailY, *self.head.getPosition())
     
     def newHead(self, newX, newY):
-        newHead = BodyNode(None, self.head, newX, newY)
+        newHead = BodyNode(None, newX, newY)
         self.head.setParent(newHead)
         self.head = newHead
         

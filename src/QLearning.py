@@ -1,14 +1,13 @@
 '''
 Basic implementation of Q Learning without neural networks
+Sometimes the machine will get stuck in an infinite loop of back and forth moves. If so just rerun the script
 '''
 import random
 from Snake import SnakeGame
 import numpy as np
 import time
 import os
-from subprocess import call
-# sometimes the machine will get stuck in an infinite loop of back and forth moves.
-# if so just rerun the script
+
 
 # Q learning equation from
 # https://towardsdatascience.com/simple-reinforcement-learning-q-learning-fcddc4b6fe56
@@ -19,6 +18,40 @@ def clear():
         os.system('clear')
     else:
         os.system('cls')
+
+def evaluateScore(Q, numRuns, displayGame):
+    # Run the game for a specified number of runs given a specific Q matrix
+    cutoff = 250 # X moves without increasing score will cut off this game run
+    scores = []
+    for i in range(numRuns):
+        game = SnakeGame(16, 16)
+        state = game.calcStateNum()
+        score = 0
+        oldScore = 0
+        gameOver = False
+        moveCounter = 0
+        while not gameOver:
+            possibleQs = Q[state, :]
+            action = np.argmax(possibleQs)
+            state, reward, gameOver, score = game.makeMove(action)
+            if displayGame:
+                game.display()
+                print("Snake Length:", score)
+                # sleep so we can see the machine play
+                time.sleep(0.05)
+                clear()
+            if score==oldScore:
+                moveCounter += 1
+            else:
+                oldScore = score
+                moveCounter = 0
+            if moveCounter >= cutoff:
+                #stuck going back and forth
+                scores.append(score)
+                break
+            
+    return np.average(score)
+
 #%%
 # state is as follows.
 # Is direction blocked by wall or snake?
@@ -31,7 +64,7 @@ Q = np.zeros((numStates, numActions))
 lr = 0.9 #learning rate
 gamma = 0.9 #discount rate
 epsilon = 0.2 #exploration rate in training games
-numEpochs = 10000 #number of games
+numEpochs = 2500 #number of games
 
 Qs = []
 print("Training for", numEpochs, "games...")
@@ -51,28 +84,9 @@ for epoch in range(numEpochs):
         Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
     if epoch % 100 == 0:
-        print("Epoch", epoch)
+        print("Epoch", epoch, "Average snake length:", evaluateScore(Q, 25, False))
 
 # %%
 
 print("Testing with last train Q matrix...")
-scores = []
-for testRun in range(5):
-    game = SnakeGame(16, 16)
-    state = game.calcStateNum()
-    gameOver = False
-    score = 0
-    print("New Game")
-    while not gameOver:
-        possibleQs = Q[state, :]
-        action = np.argmax(possibleQs)
-        game.display()
-        print("Snake Length:", score)
-        # sleep so we can see the machine play
-        time.sleep(0.05)
-        clear()
-        state, reward, gameOver, score = game.makeMove(action)
-    game.display()
-    print("Final Snake Length:", score)
-    scores.append(score)
-print("Final snake lengths: ", scores, "Average:", np.average(scores))
+print("Average snake length:", evaluateScore(Q, 5, True))
