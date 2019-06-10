@@ -1,6 +1,6 @@
 '''
 Basic implementation of Q Learning without neural networks
-Sometimes the machine will get stuck in an infinite loop of back and forth moves. If so just rerun the script
+Sometimes the machine will get stuck in an infinite loop of non-scoring moves. If so just rerun the script
 '''
 import random
 from Snake import SnakeGame
@@ -9,19 +9,17 @@ import time
 import os
 
 
-# Q learning equation from
-# https://towardsdatascience.com/simple-reinforcement-learning-q-learning-fcddc4b6fe56
-
 def clear():
-    #to clear the console between moves
+    # to clear the console between moves
     if os.name == 'posix':
         os.system('clear')
     else:
         os.system('cls')
 
+
 def evaluateScore(Q, boardDim, numRuns, displayGame):
     # Run the game for a specified number of runs given a specific Q matrix
-    cutoff = 100 # X moves without increasing score will cut off this game run
+    cutoff = 100  # X moves without increasing score will cut off this game run
     scores = []
     for i in range(numRuns):
         game = SnakeGame(boardDim, boardDim)
@@ -41,33 +39,35 @@ def evaluateScore(Q, boardDim, numRuns, displayGame):
                 print("Snake Length:", score)
                 # sleep so we can see the machine play
                 time.sleep(0.05)
-            if score==oldScore:
+            if score == oldScore:
                 moveCounter += 1
             else:
                 oldScore = score
                 moveCounter = 0
             if moveCounter >= cutoff:
-                #stuck going back and forth
+                # stuck going back and forth
                 scores.append(score)
                 break
-            
+
     return np.average(score)
 
-#%%
-boardDim = 12 #size of the baord
+
+# %%
+boardDim = 16  # size of the baord
 
 # state is as follows.
 # Is direction blocked by wall or snake?
 # Is food in this direction? can either be one or two directions eg (food is left) or (food is left and up)
 # state =  (top blocked, right blocked, down blocked, left blocked, up food, right food, down food, left food)
-numStates = 2**8  # 8 boolean values. Not all states are reachable (eg states with food directions that don't make sense)
+# 8 boolean values. Not all states are reachable (eg states with food directions that don't make sense)
+numStates = 2**8
 numActions = 4  # 4 directions that the snake can move
 Q = np.zeros((numStates, numActions))
 
-lr = 0.9 #learning rate
-gamma = 0.9 #discount rate
-epsilon = 0.2 #exploration rate in training games
-numEpochs = 2500 #number of games to train for
+# lr = 0.9 #learning rate. not used in this Q learning equation
+gamma = 0.9  # discount rate
+epsilon = 0.2  # exploration rate in training games
+numEpochs = 5000  # number of games to train for
 
 Qs = []
 print("Training for", numEpochs, "games...")
@@ -84,12 +84,17 @@ for epoch in range(numEpochs):
             possibleQs = Q[state, :]
             action = np.argmax(possibleQs)
         new_state, reward, gameOver, score = game.makeMove(action)
-        Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
+
+        # http: // mnemstudio.org/path-finding-q-learning-tutorial.htm
+        Q[state, action] = reward + gamma * np.max(Q[new_state, :])
+
+        # https://towardsdatascience.com/simple-reinforcement-learning-q-learning-fcddc4b6fe56
+        # Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
     if epoch % 100 == 0:
-        print("Epoch", epoch, "Average snake length:", evaluateScore(Q, boardDim, 25, False))
+        print("Epoch", epoch, "Average snake length without exploration:", evaluateScore(Q, boardDim, 25, False))
 
 # %%
 
-print("Testing with last train Q matrix...")
+print("Testing with last trained Q matrix...")
 print("Average snake length:", evaluateScore(Q, boardDim, 5, True))
