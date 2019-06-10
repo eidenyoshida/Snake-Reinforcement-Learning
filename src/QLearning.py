@@ -33,7 +33,7 @@ def evaluateScore(Q, boardDim, numRuns, displayGame):
             action = np.argmax(possibleQs)
             state, reward, gameOver, score = game.makeMove(action)
             if displayGame:
-                clear()
+                #                clear()
                 game.display()
                 print("Moves without increasing score:", moveCounter)
                 print("Snake Length:", score)
@@ -46,10 +46,9 @@ def evaluateScore(Q, boardDim, numRuns, displayGame):
                 moveCounter = 0
             if moveCounter >= cutoff:
                 # stuck going back and forth
-                scores.append(score)
                 break
-
-    return np.average(score)
+        scores.append(score)
+    return np.average(scores), scores
 
 
 # %%
@@ -65,11 +64,12 @@ numActions = 4  # 4 directions that the snake can move
 Q = np.zeros((numStates, numActions))
 
 # lr = 0.9 #learning rate. not used in this Q learning equation
-gamma = 0.9  # discount rate
+gamma = 0.8  # discount rate
 epsilon = 0.2  # exploration rate in training games
 numEpochs = 5000  # number of games to train for
 
 Qs = []
+bestLength = 0
 print("Training for", numEpochs, "games...")
 for epoch in range(numEpochs):
     #    print("New Game")
@@ -92,9 +92,16 @@ for epoch in range(numEpochs):
         # Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
     if epoch % 100 == 0:
-        print("Epoch", epoch, "Average snake length without exploration:", evaluateScore(Q, boardDim, 25, False))
+        averageLength, lengths = evaluateScore(Q, boardDim, 50, False)
+        if averageLength > bestLength:
+            bestLength = averageLength
+            bestQ = np.copy(Q)
+        print("Epoch", epoch, "Average snake length without exploration:", averageLength)
 
 # %%
 
-print("Testing with last trained Q matrix...")
-print("Average snake length:", evaluateScore(Q, boardDim, 5, True))
+
+print("Testing with best trained Q matrix...")
+averageLength, lengths = evaluateScore(bestQ, boardDim, 5, True)
+print("Average snake length:", averageLength)
+print("Lengths:", lengths)
