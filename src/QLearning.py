@@ -7,7 +7,6 @@ from Snake import SnakeGame
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from multiprocessing import Process
 #%%
 
 def evaluateScore(Q, boardDim, numRuns, displayGame=False):
@@ -86,25 +85,18 @@ for epoch in range(numEpochs):
         print("Epoch", epoch, "Average snake length without exploration:", averageLength)
         
 #%%
-def handle_close(evt):
-    print('Closed Figure!')
-
+#Animage games at different epochs
 print("Generating data for animation...")
-stopAnimation = False
-maxFrames = 1000
+
 plotEpochs = [0, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
-#plotEpochs = [0, 200, 400, 600]
 fig, axes = plt.subplots(3, 3, figsize=(9,9))
-fig.canvas.mpl_connect('close_event', handle_close)
 
 axList = []
 ims = []
 dataArrays = []
-games = []
-states = []
 scores = []
-images = []
 labels = []
+
 for i, row in enumerate(axes):
     for j, ax in enumerate(row):
         ax.set_title("Epoch " + str(plotEpochs[i*len(row) + j]))
@@ -115,17 +107,44 @@ for i, row in enumerate(axes):
         labels.append(ax.text(0,15, "Length: 0", bbox={'facecolor':'w', 'alpha':0.75, 'pad':1, 'edgecolor':'white'}))
         dataArrays.append(list())
         scores.append(list())
+        
+stopAnimation = False
+maxFrames = 1000
+cutoff = 100
+numGames = 5
+for k in range(numGames):
+    games = []
+    states = []
+    gameOvers = []
+    moveCounters = []
+    oldScores = []
+    for l in range(len(plotEpochs)):
         game = SnakeGame(boardDim, boardDim)
         games.append(game)
         states.append(game.calcStateNum())
-        
-for j in range(maxFrames):
-    for i in range(len(plotEpochs)):
-        possibleQs = Qs[plotEpochs[i]][states[i], :]
-        action = np.argmax(possibleQs)
-        states[i], reward, gameOver, score = games[i].makeMove(action)
-        dataArrays[i].append(games[i].plottableBoard())
-        scores[i].append(score)
+        gameOvers.append(False)
+        moveCounters.append(0)
+        oldScores.append(0)
+    for j in range(maxFrames):
+        for i in range(len(plotEpochs)):
+            possibleQs = Qs[plotEpochs[i]][states[i], :]
+            action = np.argmax(possibleQs)
+            states[i], reward, gameOver, score = games[i].makeMove(action)
+            if gameOver:
+                gameOvers[i] = True
+            dataArrays[i].append(games[i].plottableBoard())
+            scores[i].append(score)
+            if score == oldScores[i]:
+                moveCounters[i] += 1
+            else:
+                oldScores[i] = score
+                moveCounters[i] = 0
+            if moveCounters[i] >= cutoff:
+                # stuck going back and forth
+                gameOvers[i] = True
+        if not any(gameOver == False for gameOver in gameOvers):
+            print("Game", k, "finished, total moves:", len(dataArrays[0]))
+            break
 
 def animate(frameNum):
     for i, im in enumerate(ims):
@@ -134,10 +153,10 @@ def animate(frameNum):
     return ims+labels
 print("Animating snakes at different epochs...")
 
-ani = animation.FuncAnimation(fig, func=animate, frames=maxFrames,blit=True, interval=75, repeat=False, )
+numFrames = len(dataArrays[0])
+ani = animation.FuncAnimation(fig, func=animate, frames=numFrames,blit=True, interval=75, repeat=False, )
 plt.show(block=False)
 ##uncomment below if you want to output to a video file
 #print("Saving to file")
-#ani.save('output.mp4', fps=15, extra_args=['-vcodec', 'libx264'])
+#ani.save('AnimatedGames.mp4', fps=15, extra_args=['-vcodec', 'libx264'])
 #print("Done")
-
