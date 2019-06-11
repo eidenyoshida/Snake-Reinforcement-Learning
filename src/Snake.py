@@ -59,12 +59,12 @@ class Snake():
         newHead = BodyNode(None, newX, newY)
         self.head.setParent(newHead)
         self.head = newHead
-
-    def getHeadPosition(self):
-        return self.head.getPosition()
-
-    def getHeadIndex(self):
-        return self.head.getIndex()
+        
+    def getHead(self):
+        return self.head
+    
+    def getTail(self):
+        return self.tail
 
 
 class SnakeGame():
@@ -111,7 +111,7 @@ class SnakeGame():
         return True
 
     def potentialPosition(self, direction):
-        (newX, newY) = self.snake.getHeadPosition()
+        (newX, newY) = self.snake.getHead().getPosition()
         if direction == 0:
             newY -= 1
         elif direction == 1:
@@ -145,7 +145,7 @@ class SnakeGame():
         # food can be 1 or 2 directions eg. right and up
         # 0 is up, 1 is right, 2 is down, 3 is left
         foodDirections = np.zeros(4, dtype=int)
-        dist = np.array(self.foodIndex) - np.array(self.snake.getHeadIndex())
+        dist = np.array(self.foodIndex) - np.array(self.snake.getHead().getIndex())
         if dist[0] < 0:
             # down
             foodDirections[0] = 1
@@ -204,7 +204,7 @@ class SnakeGame():
                 reward = 1
             else:
                 reward = 0
-            (headX, headY) = self.snake.getHeadPosition()
+            (headX, headY) = self.snake.getHead().getPosition()
             # set old head to body val
             self.board[headY, headX] = self.bodyVal
 
