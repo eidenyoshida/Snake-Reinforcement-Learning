@@ -23,6 +23,9 @@ class BodyNode():
 
     def getPosition(self):
         return (self.x, self.y)
+    
+    def getIndex(self):
+        return (self.y, self.x)
 
 
 class Snake():
@@ -61,8 +64,7 @@ class Snake():
         return self.head.getPosition()
 
     def getHeadIndex(self):
-        headX, headY = self.head.getPosition()
-        return (headY, headX)
+        return self.head.getIndex()
 
 
 class SnakeGame():
@@ -158,6 +160,21 @@ class SnakeGame():
             foodDirections[3] = 1
         return foodDirections
 
+    def plottableBoard(self):
+        #returns board formatted for animations
+        board = np.zeros([self.width, self.height])
+        currentNode = self.snake.tail
+        count = 0
+        while True:
+            count += 1
+            board[currentNode.getIndex()] = 0.2 + 0.8*count/self.length
+            currentNode = currentNode.parent
+            if currentNode == None:
+                break
+        board[self.foodIndex] = -1
+        return board
+        
+        
     def display(self):
         for i in range(self.width+2):
             print('-', end='')
