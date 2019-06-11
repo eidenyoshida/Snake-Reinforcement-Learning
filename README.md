@@ -16,5 +16,6 @@ During the training phase, the agent will either choose the action with the max 
 This process is repeated until the game is complete. Many games are played to update the Q matrix.
 
 QLearning.py will automatically animate some samples games at various stages of the training process.
-
-![](AnimatedGames.gif)
+<p align="center">
+  ![](AnimatedGames.gif)
+</p>
