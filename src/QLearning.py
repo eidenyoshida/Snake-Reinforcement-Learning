@@ -5,19 +5,12 @@ Sometimes the machine will get stuck in an infinite loop of non-scoring moves. I
 import random
 from Snake import SnakeGame
 import numpy as np
-import time
-import os
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from multiprocessing import Process
+#%%
 
-
-def clear():
-    # to clear the console between moves
-    if os.name == 'posix':
-        os.system('clear')
-    else:
-        os.system('cls')
-
-
-def evaluateScore(Q, boardDim, numRuns, displayGame):
+def evaluateScore(Q, boardDim, numRuns, displayGame=False):
     # Run the game for a specified number of runs given a specific Q matrix
     cutoff = 100  # X moves without increasing score will cut off this game run
     scores = []
@@ -32,13 +25,6 @@ def evaluateScore(Q, boardDim, numRuns, displayGame):
             possibleQs = Q[state, :]
             action = np.argmax(possibleQs)
             state, reward, gameOver, score = game.makeMove(action)
-            if displayGame:
-                #                clear()
-                game.display()
-                print("Moves without increasing score:", moveCounter)
-                print("Snake Length:", score)
-                # sleep so we can see the machine play
-                time.sleep(0.05)
             if score == oldScore:
                 moveCounter += 1
             else:
@@ -66,9 +52,9 @@ Q = np.zeros((numStates, numActions))
 # lr = 0.9 #learning rate. not used in this Q learning equation
 gamma = 0.8  # discount rate
 epsilon = 0.2  # exploration rate in training games
-numEpochs = 5000  # number of games to train for
+numEpochs = 2600  # number of games to train for
 
-Qs = []
+Qs = dict()
 bestLength = 0
 print("Training for", numEpochs, "games...")
 for epoch in range(numEpochs):
@@ -92,16 +78,66 @@ for epoch in range(numEpochs):
         # Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
     if epoch % 100 == 0:
-        averageLength, lengths = evaluateScore(Q, boardDim, 50, False)
+        Qs[epoch] = np.copy(Q)
+        averageLength, lengths = evaluateScore(Q, boardDim, 25)
         if averageLength > bestLength:
             bestLength = averageLength
             bestQ = np.copy(Q)
         print("Epoch", epoch, "Average snake length without exploration:", averageLength)
+        
+#%%
+def handle_close(evt):
+    print('Closed Figure!')
 
-# %%
+print("Generating data for animation...")
+stopAnimation = False
+maxFrames = 1000
+plotEpochs = [0, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
+#plotEpochs = [0, 200, 400, 600]
+fig, axes = plt.subplots(3, 3, figsize=(9,9))
+fig.canvas.mpl_connect('close_event', handle_close)
 
+axList = []
+ims = []
+dataArrays = []
+games = []
+states = []
+scores = []
+images = []
+labels = []
+for i, row in enumerate(axes):
+    for j, ax in enumerate(row):
+        ax.set_title("Epoch " + str(plotEpochs[i*len(row) + j]))
+        ax.get_yaxis().set_visible(False)
+        ax.get_xaxis().set_visible(False)
+        axList.append(ax)
+        ims.append(ax.imshow(np.zeros([boardDim, boardDim]), vmin=-1, vmax=1, cmap='RdGy'))
+        labels.append(ax.text(0,15, "Length: 0", bbox={'facecolor':'w', 'alpha':0.75, 'pad':1, 'edgecolor':'white'}))
+        dataArrays.append(list())
+        scores.append(list())
+        game = SnakeGame(boardDim, boardDim)
+        games.append(game)
+        states.append(game.calcStateNum())
+        
+for j in range(maxFrames):
+    for i in range(len(plotEpochs)):
+        possibleQs = Qs[plotEpochs[i]][states[i], :]
+        action = np.argmax(possibleQs)
+        states[i], reward, gameOver, score = games[i].makeMove(action)
+        dataArrays[i].append(games[i].plottableBoard())
+        scores[i].append(score)
 
-print("Testing with best trained Q matrix...")
-averageLength, lengths = evaluateScore(bestQ, boardDim, 5, True)
-print("Average snake length:", averageLength)
-print("Lengths:", lengths)
+def animate(frameNum):
+    for i, im in enumerate(ims):
+        labels[i].set_text("Length: " + str(scores[i][frameNum]))
+        ims[i].set_data(dataArrays[i][frameNum])
+    return ims+labels
+print("Animating snakes at different epochs...")
+
+ani = animation.FuncAnimation(fig, func=animate, frames=maxFrames,blit=True, interval=75, repeat=False, )
+plt.show(block=False)
+##uncomment below if you want to output to a video file
+#print("Saving to file")
+#ani.save('output.mp4', fps=15, extra_args=['-vcodec', 'libx264'])
+#print("Done")
+

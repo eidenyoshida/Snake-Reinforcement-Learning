@@ -23,6 +23,9 @@ class BodyNode():
 
     def getPosition(self):
         return (self.x, self.y)
+    
+    def getIndex(self):
+        return (self.y, self.x)
 
 
 class Snake():
@@ -56,13 +59,12 @@ class Snake():
         newHead = BodyNode(None, newX, newY)
         self.head.setParent(newHead)
         self.head = newHead
-
-    def getHeadPosition(self):
-        return self.head.getPosition()
-
-    def getHeadIndex(self):
-        headX, headY = self.head.getPosition()
-        return (headY, headX)
+        
+    def getHead(self):
+        return self.head
+    
+    def getTail(self):
+        return self.tail
 
 
 class SnakeGame():
@@ -109,7 +111,7 @@ class SnakeGame():
         return True
 
     def potentialPosition(self, direction):
-        (newX, newY) = self.snake.getHeadPosition()
+        (newX, newY) = self.snake.getHead().getPosition()
         if direction == 0:
             newY -= 1
         elif direction == 1:
@@ -143,7 +145,7 @@ class SnakeGame():
         # food can be 1 or 2 directions eg. right and up
         # 0 is up, 1 is right, 2 is down, 3 is left
         foodDirections = np.zeros(4, dtype=int)
-        dist = np.array(self.foodIndex) - np.array(self.snake.getHeadIndex())
+        dist = np.array(self.foodIndex) - np.array(self.snake.getHead().getIndex())
         if dist[0] < 0:
             # down
             foodDirections[0] = 1
@@ -158,6 +160,21 @@ class SnakeGame():
             foodDirections[3] = 1
         return foodDirections
 
+    def plottableBoard(self):
+        #returns board formatted for animations
+        board = np.zeros([self.width, self.height])
+        currentNode = self.snake.tail
+        count = 0
+        while True:
+            count += 1
+            board[currentNode.getIndex()] = 0.2 + 0.8*count/self.length
+            currentNode = currentNode.parent
+            if currentNode == None:
+                break
+        board[self.foodIndex] = -1
+        return board
+        
+        
     def display(self):
         for i in range(self.width+2):
             print('-', end='')
@@ -187,7 +204,7 @@ class SnakeGame():
                 reward = 1
             else:
                 reward = 0
-            (headX, headY) = self.snake.getHeadPosition()
+            (headX, headY) = self.snake.getHead().getPosition()
             # set old head to body val
             self.board[headY, headX] = self.bodyVal
 
