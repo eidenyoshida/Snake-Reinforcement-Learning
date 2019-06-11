@@ -8,6 +8,7 @@ QLearning.py teaches an agent to play the snake game using Q-Learning. For every
 The Q matrix is initially filled with zeros. The size is (number of states, number of actions).
 
 Every move that the agent makes, the Q table is updated as below:
+
 Q[state, action] = reward + gamma * max(Q[new_state, :])
 
 During the training phase, the agent will either choose the action with the max Q value or will randomly choose an action. The Q matrix is then updated using the equation above.
