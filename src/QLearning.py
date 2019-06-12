@@ -51,12 +51,12 @@ Q = np.zeros((numStates, numActions))
 # lr = 0.9 #learning rate. not used in this Q learning equation
 gamma = 0.8  # discount rate
 epsilon = 0.2  # exploration rate in training games
-numEpochs = 2600  # number of games to train for
+numEpisodes = 2600  # number of games to train for
 
 Qs = dict()
 bestLength = 0
-print("Training for", numEpochs, "games...")
-for epoch in range(numEpochs):
+print("Training for", numEpisodes, "games...")
+for episode in range(numEpisodes):
     #    print("New Game")
     game = SnakeGame(boardDim, boardDim)
     state = game.calcStateNum()
@@ -76,19 +76,19 @@ for epoch in range(numEpochs):
         # https://towardsdatascience.com/simple-reinforcement-learning-q-learning-fcddc4b6fe56
         # Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
-    if epoch % 100 == 0:
-        Qs[epoch] = np.copy(Q)
+    if episode % 100 == 0:
+        Qs[episode] = np.copy(Q)
         averageLength, lengths = evaluateScore(Q, boardDim, 25)
         if averageLength > bestLength:
             bestLength = averageLength
             bestQ = np.copy(Q)
-        print("Epoch", epoch, "Average snake length without exploration:", averageLength)
+        print("Episode", episode, "Average snake length without exploration:", averageLength)
         
 #%%
-#Animage games at different epochs
+#Animage games at different episodes
 print("Generating data for animation...")
 
-plotEpochs = [0, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
+plotEpisodes = [0, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
 fig, axes = plt.subplots(3, 3, figsize=(9,9))
 
 axList = []
@@ -99,7 +99,7 @@ labels = []
 
 for i, row in enumerate(axes):
     for j, ax in enumerate(row):
-        ax.set_title("Epoch " + str(plotEpochs[i*len(row) + j]))
+        ax.set_title("Episode " + str(plotEpisodes[i*len(row) + j]))
         ax.get_yaxis().set_visible(False)
         ax.get_xaxis().set_visible(False)
         axList.append(ax)
@@ -118,7 +118,7 @@ for k in range(numGames):
     gameOvers = []
     moveCounters = []
     oldScores = []
-    for l in range(len(plotEpochs)):
+    for l in range(len(plotEpisodes)):
         game = SnakeGame(boardDim, boardDim)
         games.append(game)
         states.append(game.calcStateNum())
@@ -126,8 +126,8 @@ for k in range(numGames):
         moveCounters.append(0)
         oldScores.append(0)
     for j in range(maxFrames):
-        for i in range(len(plotEpochs)):
-            possibleQs = Qs[plotEpochs[i]][states[i], :]
+        for i in range(len(plotEpisodes)):
+            possibleQs = Qs[plotEpisodes[i]][states[i], :]
             action = np.argmax(possibleQs)
             states[i], reward, gameOver, score = games[i].makeMove(action)
             if gameOver:
@@ -151,11 +151,12 @@ def animate(frameNum):
         labels[i].set_text("Length: " + str(scores[i][frameNum]))
         ims[i].set_data(dataArrays[i][frameNum])
     return ims+labels
-print("Animating snakes at different epochs...")
+print("Animating snakes at different episodes...")
 
 numFrames = len(dataArrays[0])
 ani = animation.FuncAnimation(fig, func=animate, frames=numFrames,blit=True, interval=75, repeat=False, )
 plt.show(block=False)
+#%%
 ##uncomment below if you want to output to a video file
 #print("Saving to file")
 #ani.save('AnimatedGames.mp4', fps=15, extra_args=['-vcodec', 'libx264'])
