@@ -217,14 +217,14 @@ class SnakeGame():
                 self.spawnFood()
                 self.length += 1
                 # if you want to give a higher reward for getting the fruit, uncomment below
-                # reward = 5
+                reward = 2
             else:
                 # move the snake
                 (oldTailX, oldTailY, newHeadX, newHeadY) = self.snake.move(direction)
                 self.board[oldTailY, oldTailX] = 0
                 self.board[newHeadY, newHeadX] = self.headVal
         else:
-            reward = -5
+            reward = -2
             gameOver = True
         self.calcState()
         return (self.calcStateNum(), reward, gameOver, self.length)

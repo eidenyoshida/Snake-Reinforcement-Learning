@@ -51,9 +51,9 @@ Q = np.zeros((numStates, numActions))
 # lr = 0.9 #learning rate. not used in this Q learning equation
 gamma = 0.8  # discount rate
 epsilon = 0.2  # exploration rate in training games
-numEpisodes = 2600  # number of games to train for
+numEpisodes = 10001  # number of games to train for
 
-Qs = dict()
+Qs = np.zeros([numEpisodes, numStates, numActions])
 bestLength = 0
 print("Training for", numEpisodes, "games...")
 for episode in range(numEpisodes):
@@ -76,6 +76,7 @@ for episode in range(numEpisodes):
         # https://towardsdatascience.com/simple-reinforcement-learning-q-learning-fcddc4b6fe56
         # Q[state, action] = Q[state, action] + lr * (reward + gamma * np.max(Q[new_state, :]) - Q[state, action])
         state = new_state
+    Qs[episode, :, :] = np.copy(Q)
     if episode % 100 == 0:
         Qs[episode] = np.copy(Q)
         averageLength, lengths = evaluateScore(Q, boardDim, 25)
@@ -87,8 +88,8 @@ for episode in range(numEpisodes):
 #%%
 #Animage games at different episodes
 print("Generating data for animation...")
-
-plotEpisodes = [0, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
+#plotEpisodes = [0, 200, 300, 400, 500, 600, 700, 800, 900]
+plotEpisodes = [0, 200, 400, 600, 800, 1000, 2500, 5000, 10000]
 fig, axes = plt.subplots(3, 3, figsize=(9,9))
 
 axList = []
@@ -127,7 +128,7 @@ for k in range(numGames):
         oldScores.append(0)
     for j in range(maxFrames):
         for i in range(len(plotEpisodes)):
-            possibleQs = Qs[plotEpisodes[i]][states[i], :]
+            possibleQs = Qs[plotEpisodes[i], :, :][states[i], :]
             action = np.argmax(possibleQs)
             states[i], reward, gameOver, score = games[i].makeMove(action)
             if gameOver:
