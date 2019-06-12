@@ -17,4 +17,6 @@ This process is repeated until the game is complete. Many games are played to up
 
 QLearning.py will automatically animate some samples games at various stages of the training process.
 
+See below for example games using the Q matrix at various stages in the training process.
+
 ![](AnimatedGames.gif)
