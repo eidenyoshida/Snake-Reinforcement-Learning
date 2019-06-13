@@ -78,7 +78,6 @@ for episode in range(numEpisodes):
         state = new_state
     Qs[episode, :, :] = np.copy(Q)
     if episode % 100 == 0:
-        Qs[episode] = np.copy(Q)
         averageLength, lengths = evaluateScore(Q, boardDim, 25)
         if averageLength > bestLength:
             bestLength = averageLength
@@ -86,7 +85,7 @@ for episode in range(numEpisodes):
         print("Episode", episode, "Average snake length without exploration:", averageLength)
         
 #%%
-#Animage games at different episodes
+#Animate games at different episodes
 print("Generating data for animation...")
 #plotEpisodes = [0, 200, 300, 400, 500, 600, 700, 800, 900]
 plotEpisodes = [0, 200, 400, 600, 800, 1000, 2500, 5000, 10000]
@@ -112,7 +111,7 @@ for i, row in enumerate(axes):
 stopAnimation = False
 maxFrames = 1000
 cutoff = 100
-numGames = 5
+numGames = 10
 for k in range(numGames):
     games = []
     states = []
